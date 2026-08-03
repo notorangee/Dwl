@@ -27,10 +27,11 @@ static const char *const autostart[] = {
 };
 
 static const Rule rules[] = {
-/*   app_id            title                       tags mask     isfloating   monitor */
-  { "Alacritty",      "Alacritty - AutoStart",     1 << 0,       0,           -1 },
-	{ "google-chrome",  NULL,                        1 << 1,       0,           -1 },
-	{ "steam",          NULL,                        1 << 2,       0,           -1 },
+/*   app_id            title                       tags mask     isfloating   monitor  scratchkey */
+  { "Alacritty",      "Alacritty - AutoStart",     1 << 0,       0,           -1,       0 },
+	{ "google-chrome",  NULL,                        1 << 1,       0,           -1,       0 },
+	{ "steam",          NULL,                        1 << 2,       0,           -1,       0 },
+  { NULL,             "scratchpad",                0,            1,           -1,      's' },
     /* default/example rule: can be changed but cannot be eliminated; at least one rule must exist */
 };
 
@@ -125,12 +126,16 @@ static const enum libinput_config_tap_button_map button_map = LIBINPUT_CONFIG_TA
 static const char *termcmd[] = { "alacritty", NULL };
 static const char *menucmd[] = { "rofi", "-show", "drun", NULL };
 
+/* named scratchpads - First arg only serves to match against key in rules*/
+static const char *scratchpadcmd[] = { "s", "alacritty", "-T", "scratchpad", NULL };
+
 static const Key keys[] = {
 	/* Note that Shift changes certain key codes: 2 -> at, etc. */
 	/* modifier                  key                  function          argument */
 	{ MODKEY,                    XKB_KEY_p,           spawn,            {.v = menucmd} },
 	{ MODKEY,                    XKB_KEY_Return,      spawn,            {.v = termcmd} },
 	{ MODKEY,                    XKB_KEY_t,           togglebar,        {0} },
+  { MODKEY,                    XKB_KEY_w,           togglescratch,    {.v = scratchpadcmd } },
 	{ MODKEY,                    XKB_KEY_j,           focusstack,       {.i = +1} },
 	{ MODKEY,                    XKB_KEY_k,           focusstack,       {.i = -1} },
 	{ MODKEY,                    XKB_KEY_o,           incnmaster,       {.i = +1} },
