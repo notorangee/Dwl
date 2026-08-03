@@ -7,7 +7,7 @@
 static const int sloppyfocus               = 1;  /* focus follows mouse */
 static const int bypass_surface_visibility = 0;  /* 1 means idle inhibitors will disable idle tracking even if it's surface isn't visible  */
 static const unsigned int borderpx         = 3;  /* border pixel of windows */
-static const float rootcolor[]             = COLOR(0xe8e4e4ff);
+static const float rootcolor[]             = COLOR(0x222222ff);
 static const float bordercolor[]           = COLOR(0x2d2c2cff);
 static const float focuscolor[]            = COLOR(0x9b8beeff);
 static const float urgentcolor[]           = COLOR(0xff0000ff);
@@ -124,8 +124,8 @@ static const Key keys[] = {
 	/* modifier                  key                  function          argument */
 	{ MODKEY,                    XKB_KEY_p,           spawn,            {.v = menucmd} },
 	{ MODKEY,                    XKB_KEY_Return,      spawn,            {.v = termcmd} },
-	{ MODKEY,                    XKB_KEY_k,           focusstack,       {.i = +1} },
-	{ MODKEY,                    XKB_KEY_j,           focusstack,       {.i = -1} },
+	{ MODKEY,                    XKB_KEY_j,           focusstack,       {.i = +1} },
+	{ MODKEY,                    XKB_KEY_k,           focusstack,       {.i = -1} },
 	{ MODKEY,                    XKB_KEY_o,           incnmaster,       {.i = +1} },
 	{ MODKEY,                    XKB_KEY_y,           incnmaster,       {.i = -1} },
 	{ MODKEY,                    XKB_KEY_h,           setmfact,         {.f = -0.05f} },
