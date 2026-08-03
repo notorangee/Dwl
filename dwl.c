@@ -3000,7 +3000,7 @@ tagmon(const Arg *arg)
 void
 tile(Monitor *m)
 {
-	unsigned int mw, my, ty;
+	unsigned int h, r, mw, my, ty;
 	int i, n = 0;
 	Client *c;
 
@@ -3011,21 +3011,26 @@ tile(Monitor *m)
 		return;
 
 	if (n > m->nmaster)
-		mw = m->nmaster ? (int)roundf(m->w.width * m->mfact) : 0;
+		mw = m->nmaster ? (int)roundf((m->w.width + gappx) * m->mfact) : 0;
 	else
 		mw = m->w.width;
-	i = my = ty = 0;
+	i = 0;
+	my = ty = gappx;
 	wl_list_for_each(c, &clients, link) {
 		if (!VISIBLEON(c, m) || c->isfloating || c->isfullscreen)
 			continue;
 		if (i < m->nmaster) {
-			resize(c, (struct wlr_box){.x = m->w.x, .y = m->w.y + my, .width = mw,
-				.height = (m->w.height - my) / (MIN(n, m->nmaster) - i)}, 0);
-			my += c->geom.height;
+			r = MIN(n, m->nmaster) - i;
+			h = (m->w.height - my - gappx - gappx * (r - 1)) / r;
+			resize(c, (struct wlr_box){.x = m->w.x + gappx, .y = m->w.y + my,
+				.width = mw - 2 * gappx, .height = h}, 0);
+			my += c->geom.height + gappx;
 		} else {
+			r = n - i;
+			h = (m->w.height - ty - gappx - gappx * (r - 1)) / r;
 			resize(c, (struct wlr_box){.x = m->w.x + mw, .y = m->w.y + ty,
-				.width = m->w.width - mw, .height = (m->w.height - ty) / (n - i)}, 0);
-			ty += c->geom.height;
+				.width = m->w.width - mw - gappx, .height = h}, 0);
+			ty += c->geom.height + gappx;
 		}
 		i++;
 	}
