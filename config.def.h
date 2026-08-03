@@ -20,10 +20,16 @@ static const float fullscreen_bg[]         = {0.0f, 0.0f, 0.0f, 1.0f}; /* You ca
 /* logging */
 static int log_level = WLR_ERROR;
 
+/* Autostart */
+static const char *const autostart[] = {
+        "sh", "-c", "$HOME/Dwm/Scripts/dwm_autostart.sh", NULL,
+        NULL /* terminate */
+};
+
 static const Rule rules[] = {
 /*   app_id            title                       tags mask     isfloating   monitor */
   { "Alacritty",      "Alacritty - AutoStart",     1 << 0,       0,           -1 },
-	{ "Google-chrome",  NULL,                        1 << 1,       0,           -1 },
+	{ "google-chrome",  NULL,                        1 << 1,       0,           -1 },
 	{ "steam",          NULL,                        1 << 2,       0,           -1 },
     /* default/example rule: can be changed but cannot be eliminated; at least one rule must exist */
 };
