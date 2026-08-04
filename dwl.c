@@ -1882,7 +1882,14 @@ incnmaster(const Arg *arg)
 {
 	if (!arg || !selmon)
 		return;
-	selmon->nmaster = selmon->pertag->nmasters[selmon->pertag->curtag] = MAX(selmon->nmaster + arg->i, 0);
+  Client *c;
+	unsigned int maxmaster = 0, nmaster;
+  wl_list_for_each(c, &clients, link) {
+		if (VISIBLEON(c, selmon) && !c->isfloating && !c->isfullscreen)
+			maxmaster++;
+	}
+  nmaster = MAX(selmon->nmaster + arg->i, 0);
+	selmon->nmaster = selmon->pertag->nmasters[selmon->pertag->curtag] = MIN(maxmaster, nmaster);
 	arrange(selmon);
 }
 
