@@ -2058,13 +2058,13 @@ mapnotify(struct wl_listener *listener, void *data)
       if (strstr(appid, "MusicInfo")){
         c->geom.width = m->w.width / 5;
         c->geom.height = m->w.height / 15;
-        c->geom.x = m->w.x + (m->m.width - c->geom.width - 2 * c->bw);
+        c->geom.x = m->w.x + (m->m.width - c->geom.width - 3 * c->bw - gappx);
         c->geom.y = m->w.y + 2 * c->bw;
       }
       if (strstr(appid, "MusicVisua")){
         c->geom.width = m->w.width / 5;
         c->geom.height = m->w.height / 6;
-        c->geom.x = m->w.x + (m->m.width - c->geom.width - 2 * c->bw);
+        c->geom.x = m->w.x + (m->m.width - c->geom.width - 3 * c->bw - gappx);
         c->geom.y = m->w.y + 2 * c->bw + m->w.height / 15;
       }
     }
