@@ -139,7 +139,7 @@ typedef struct {
 #endif
 	unsigned int bw;
 	uint32_t tags;
-	int isfloating, isurgent, isfullscreen;
+	int isfloating, isneverfocus, isurgent, isfullscreen;
 	char scratchkey;
 	uint32_t resize; /* configure serial of a pending resize */
 } Client;
@@ -237,6 +237,7 @@ typedef struct {
 	const char *title;
 	uint32_t tags;
 	int isfloating;
+	int isneverfocus;
 	int monitor;
 	const char scratchkey;
 } Rule;
@@ -526,6 +527,7 @@ applyrules(Client *c)
 		if ((!r->title || strstr(title, r->title))
 				&& (!r->id || strstr(appid, r->id))) {
 			c->isfloating = r->isfloating;
+			c->isneverfocus = r->isneverfocus;
 			c->scratchkey = r->scratchkey;
 			newtags |= r->tags;
 			i = 0;
@@ -1671,6 +1673,9 @@ focusclient(Client *c, int lift)
 	Client *old_c = NULL;
 	LayerSurface *old_l = NULL;
 
+  if (c && c->isneverfocus)
+    return;
+
 	if (locked)
 		return;
 
@@ -1764,14 +1769,14 @@ focusstack(const Arg *arg)
 		wl_list_for_each(c, &sel->link, link) {
 			if (&c->link == &clients)
 				continue; /* wrap past the sentinel node */
-			if (VISIBLEON(c, selmon))
+			if ( !c->isneverfocus && VISIBLEON(c, selmon))
 				break; /* found it */
 		}
 	} else {
 		wl_list_for_each_reverse(c, &sel->link, link) {
 			if (&c->link == &clients)
 				continue; /* wrap past the sentinel node */
-			if (VISIBLEON(c, selmon))
+			if ( !c->isneverfocus && VISIBLEON(c, selmon))
 				break; /* found it */
 		}
 	}
@@ -1787,7 +1792,7 @@ focustop(Monitor *m)
 {
 	Client *c;
 	wl_list_for_each(c, &fstack, flink) {
-		if (VISIBLEON(c, m))
+		if (!c->isneverfocus && VISIBLEON(c, m))
 			return c;
 	}
 	return NULL;
@@ -2055,14 +2060,12 @@ mapnotify(struct wl_listener *listener, void *data)
         c->geom.height = m->w.height / 15;
         c->geom.x = m->w.x + (m->m.width - c->geom.width - 2 * c->bw);
         c->geom.y = m->w.y + 2 * c->bw;
-        // c->neverfocus = True;
       }
       if (strstr(appid, "MusicVisua")){
         c->geom.width = m->w.width / 5;
         c->geom.height = m->w.height / 6;
         c->geom.x = m->w.x + (m->m.width - c->geom.width - 2 * c->bw);
         c->geom.y = m->w.y + 2 * c->bw + m->w.height / 15;
-        // c->neverfocus = True;
       }
     }
   }
@@ -2073,7 +2076,7 @@ mapnotify(struct wl_listener *listener, void *data)
 		wlr_scene_node_reparent(&c->scene->node, layers[LyrFloat]);
 		wlr_scene_node_set_position(&c->scene->node, c->geom.x, c->geom.y);
 		client_set_size(c, c->geom.width, c->geom.height);
-		if (client_wants_focus(c)) {
+		if (!c->isneverfocus && client_wants_focus(c)) {
 			focusclient(c, 1);
 			exclusive_focus = c;
 		}
@@ -2377,7 +2380,7 @@ pointerfocus(Client *c, struct wlr_surface *surface, double sx, double sy,
 	struct timespec now;
 
 	if (surface != seat->pointer_state.focused_surface &&
-			sloppyfocus && time && c && !client_is_unmanaged(c))
+			sloppyfocus && time && c && !client_is_unmanaged(c) && !c->isneverfocus)
 		focusclient(c, 0);
 
 	/* If surface is NULL, clear pointer focus */
