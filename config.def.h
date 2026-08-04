@@ -32,6 +32,7 @@ static const Rule rules[] = {
   { "Alacritty",      "Alacritty - AutoStart",     1 << 0,       0,           -1,       0 },
 	{ "google-chrome",  NULL,                        1 << 1,       0,           -1,       0 },
 	{ "steam",          NULL,                        1 << 2,       0,           -1,       0 },
+  { "Alacritty",      "bluetuith",                 0,            1,           -1,       0 },
   { NULL,             "scratchpad",                0,            1,           -1,      's' },
     /* default/example rule: can be changed but cannot be eliminated; at least one rule must exist */
 };
@@ -96,7 +97,7 @@ LIBINPUT_CONFIG_SEND_EVENTS_ENABLED
 LIBINPUT_CONFIG_SEND_EVENTS_DISABLED
 LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE
 */
-static const uint32_t send_events_mode = LIBINPUT_CONFIG_SEND_EVENTS_ENABLED;
+static const uint32_t send_events_mode = LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE;
 
 /* You can choose between:
 LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT
@@ -130,8 +131,30 @@ static const char *menucmd[] = { "rofi", "-show", "drun", NULL };
 /* named scratchpads - First arg only serves to match against key in rules*/
 static const char *scratchpadcmd[] = { "s", "alacritty", "-T", "scratchpad", NULL };
 
+static const char *bluetuithcmd[] = {"alacritty", "-t", "bluetuith", "-e", "bluetuith", NULL };
+static const char *musiccmd[] = {"/home/orange/Dwm/Scripts/system/dwm_music.sh", NULL };
+static const char *forceoffandclockcmd[] = { "/home/orange/Dwm/Scripts/system/forceoff_lock.sh", NULL };
+static const char *hibernatecmd[] = { "systemctl", "hibernate", NULL };
+static const char *poweroffcmd[]  = { "poweroff", NULL };
+static const char *rebootcmd[]  = { "reboot", NULL };
+
 static const Key keys[] = {
 	/* Note that Shift changes certain key codes: 2 -> at, etc. */
+  { MODKEY,                    XKB_KEY_F1,          spawn,           SHCMD("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle") },
+  { MODKEY,                    XKB_KEY_F2,          spawn,           SHCMD("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-") },
+  { MODKEY,                    XKB_KEY_F3,          spawn,           SHCMD("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+") },
+	{ MODKEY,                    XKB_KEY_F4,          spawn,  	        {.v = bluetuithcmd } },
+  { MODKEY,                    XKB_KEY_F5,          spawn,           SHCMD("light -U 5") },
+  { MODKEY,                    XKB_KEY_F6,          spawn,           SHCMD("light -A 5") },
+  { MODKEY,                    XKB_KEY_F7,          spawn,           {.v = forceoffandclockcmd } } ,
+  { MODKEY,                    XKB_KEY_F9,          spawn,           {.v = musiccmd } } ,
+	{ MODKEY,             		   XKB_KEY_Escape,      spawn,           SHCMD("grim -g \"$(slurp)\" - | wl-copy") }, //Esc
+
+	/*Super+Shift*/
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Escape,      spawn,           {.v = hibernatecmd } }, //休眠
+  { MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_F1,          spawn,           {.v = poweroffcmd } }, 
+  { MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_F2,          spawn,           {.v = rebootcmd } }, 
+
 	/* modifier                  key                  function          argument */
 	{ MODKEY,                    XKB_KEY_p,           spawn,            {.v = menucmd} },
 	{ MODKEY,                    XKB_KEY_Return,      spawn,            {.v = termcmd} },
