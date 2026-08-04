@@ -33,7 +33,10 @@ static const Rule rules[] = {
 	{ "google-chrome",  NULL,                        1 << 1,       0,           -1,       0 },
 	{ "steam",          NULL,                        1 << 2,       0,           -1,       0 },
   { "Alacritty",      "bluetuith",                 0,            1,           -1,       0 },
-  { NULL,             "scratchpad",                0,            1,           -1,      's' },
+  { "Alacritty",      "MusicWin",                 ~0,            1,           -1,       0 },
+	{ "Alacritty",      "MusicVisua",               ~0,            1,           -1,       0 },
+	{ "Alacritty",      "MusicInfo",                ~0,            1,           -1,       0 },
+  { NULL,             "scratchpad",                0,            1,           -1,      's'},
     /* default/example rule: can be changed but cannot be eliminated; at least one rule must exist */
 };
 

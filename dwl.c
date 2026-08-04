@@ -2048,6 +2048,22 @@ mapnotify(struct wl_listener *listener, void *data)
       c->geom.height = m->m.height / 2;
       c->geom.x = m->m.x + (m->m.width - c->geom.width) / 2;
       c->geom.y = m->m.y + (m->m.height - c->geom.height) / 2;
+
+      const char *appid = client_get_title(c);
+      if (strstr(appid, "MusicInfo")){
+        c->geom.width = m->w.width / 5;
+        c->geom.height = m->w.height / 15;
+        c->geom.x = m->w.x + (m->m.width - c->geom.width - 2 * c->bw);
+        c->geom.y = m->w.y + 2 * c->bw;
+        // c->neverfocus = True;
+      }
+      if (strstr(appid, "MusicVisua")){
+        c->geom.width = m->w.width / 5;
+        c->geom.height = m->w.height / 6;
+        c->geom.x = m->w.x + (m->m.width - c->geom.width - 2 * c->bw);
+        c->geom.y = m->w.y + 2 * c->bw + m->w.height / 15;
+        // c->neverfocus = True;
+      }
     }
   }
 
