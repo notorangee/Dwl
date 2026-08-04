@@ -139,7 +139,7 @@ typedef struct {
 #endif
 	unsigned int bw;
 	uint32_t tags;
-	int isfloating, isneverfocus, isurgent, isfullscreen;
+	int isfloating, isneverfocus, isurgent, isfullscreen, oldfullscreen;
 	char scratchkey;
 	uint32_t resize; /* configure serial of a pending resize */
 } Client;
@@ -3082,7 +3082,7 @@ togglefullscreen(const Arg *arg)
 void
 togglescratch(const Arg *arg)
 {
-	Client *c;
+	Client *c, *sel;
 	unsigned int found = 0;
 
 	/* search for first window that matches the scratchkey */
@@ -3095,7 +3095,23 @@ togglescratch(const Arg *arg)
 	if (found) {
 		c->tags = VISIBLEON(c, selmon) ? 0 : selmon->tagset[selmon->seltags];
 
-		focusclient(c->tags == 0 ? focustop(selmon) : c, 1);
+    if (c->tags != 0){
+      sel = focustop(selmon);
+      if (sel && sel->isfullscreen) {
+        sel->oldfullscreen = 1;
+        setfullscreen(sel, 0);
+      }
+      focusclient(c, 1);
+    } else {
+      focusclient(focustop(selmon), 1);
+      wl_list_for_each(sel, &clients, link) {
+        if (sel->mon == selmon && sel->oldfullscreen) {
+                sel->oldfullscreen = 0;
+                setfullscreen(sel, 1);
+                break;
+        }
+      }
+    }
 		arrange(selmon);
 	} else{
 		spawnscratch(arg);
