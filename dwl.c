@@ -115,6 +115,7 @@ typedef struct {
 	struct wl_list link;
 	struct wl_list flink;
 	struct wlr_box geom; /* layout-relative, includes border */
+	struct wlr_box old_geom; /* layout-relative, includes border */
 	struct wlr_box prev; /* layout-relative, includes border */
 	struct wlr_box bounds; /* only width and height are used */
 	union {
@@ -140,7 +141,7 @@ typedef struct {
 #endif
 	unsigned int bw;
 	uint32_t tags;
-	int isfloating, isneverfocus, isurgent, isfullscreen, oldfullscreen;
+	int isfloating, isneverfocus, isurgent, isfullscreen, oldfullscreen, ismaxwin;
 	char scratchkey;
 	uint32_t resize; /* configure serial of a pending resize */
 } Client;
@@ -367,6 +368,7 @@ static void togglefullscreen(const Arg *arg);
 static void togglescratch(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
+static void togglemaxwin(const Arg *arg);
 static void unlocksession(struct wl_listener *listener, void *data);
 static void unmaplayersurfacenotify(struct wl_listener *listener, void *data);
 static void unmapnotify(struct wl_listener *listener, void *data);
@@ -562,6 +564,10 @@ arrange(Monitor *m)
 
 	wl_list_for_each(c, &clients, link) {
 		if (c->mon == m) {
+      if (c->ismaxwin && !c->isfullscreen && !(c->scratchkey == scratchpadcmd[0][0])){
+        c->ismaxwin = 0;
+        resize(c, c->old_geom, 0);
+      }
 			wlr_scene_node_set_enabled(&c->scene->node, VISIBLEON(c, m));
 			client_set_suspended(c, !VISIBLEON(c, m));
 		}
@@ -3197,6 +3203,32 @@ toggleview(const Arg *arg)
 	focusclient(focustop(selmon), 1);
 	arrange(selmon);
 	printstatus();
+}
+
+void
+togglemaxwin(const Arg *arg)
+{
+	Client *c = focustop(selmon);
+	if (!c || c->isfullscreen)
+		return;
+
+	if (c->ismaxwin) {
+		c->ismaxwin = 0;
+		resize(c, c->old_geom, 0);
+		arrange(selmon);
+	} else {
+		c->old_geom = c->geom;
+		c->ismaxwin = 1;
+    struct wlr_box maxwin = {
+				.x = selmon->w.x + gappx,
+				.y = selmon->w.y + gappx,
+				.width = selmon->w.width - 2 * gappx,
+				.height = selmon->w.height - 2 * gappx
+			};
+		resize(c, maxwin, 0);
+		wlr_scene_node_raise_to_top(&c->scene_surface->node);
+		focusclient(c, 1);
+	}
 }
 
 void
