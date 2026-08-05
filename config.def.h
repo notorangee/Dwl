@@ -28,15 +28,15 @@ static const char *const autostart[] = {
 };
 
 static const Rule rules[] = {
-/*   app_id            title                       tags mask     isfloating isneverfocus   monitor  scratchkey */
-  { "Alacritty",      "Alacritty - AutoStart",     1 << 0,       0,         0,             -1,       0 },
-	{ "google-chrome",  NULL,                        1 << 1,       0,         0,             -1,       0 },
-	{ "steam",          NULL,                        1 << 2,       0,         0,             -1,       0 },
-  { "Alacritty",      "bluetuith",                 0,            1,         0,             -1,       0 },
-  { "Alacritty",      "MusicWin",                 ~0,            1,         0,             -1,       0 },
-	{ "Alacritty",      "MusicVisua",               ~0,            1,         1,             -1,       0 },
-	{ "Alacritty",      "MusicInfo",                ~0,            1,         1,             -1,       0 },
-  { NULL,             "scratchpad",                0,            1,         0,             -1,      's'},
+/*   app_id            title                       tags mask     isfloating isneverfocus fakefullscreen monitor  scratchkey */
+  { "Alacritty",      "Alacritty - AutoStart",     1 << 0,       0,         0,           0,               -1,       0 },
+	{ "google-chrome",  NULL,                        1 << 1,       0,         0,           1,               -1,       0 },
+	{ "steam",          NULL,                        1 << 2,       0,         0,           0,               -1,       0 },
+  { "Alacritty",      "bluetuith",                 0,            1,         0,           0,               -1,       0 },
+  { "Alacritty",      "MusicWin",                 ~0,            1,         0,           0,               -1,       0 },
+	{ "Alacritty",      "MusicVisua",               ~0,            1,         1,           0,               -1,       0 },
+	{ "Alacritty",      "MusicInfo",                ~0,            1,         1,           0,               -1,       0 },
+  { NULL,             "scratchpad",                0,            1,         0,           0,               -1,      's'},
     /* default/example rule: can be changed but cannot be eliminated; at least one rule must exist */
 };
 
