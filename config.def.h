@@ -32,11 +32,11 @@ static const Rule rules[] = {
   { "Alacritty",      "Alacritty - AutoStart",     1 << 0,       0,         0,           0,               -1,       0 },
 	{ "google-chrome",  NULL,                        1 << 1,       0,         0,           1,               -1,       0 },
 	{ "steam",          NULL,                        1 << 2,       0,         0,           0,               -1,       0 },
-  { "Alacritty",      "bluetuith",                 0,            1,         0,           0,               -1,       0 },
+  { "Alacritty",      "Bluetuith",                 0,            1,         0,           0,               -1,       0 },
   { "Alacritty",      "MusicWin",                 ~0,            1,         0,           0,               -1,       0 },
 	{ "Alacritty",      "MusicVisua",               ~0,            1,         1,           0,               -1,       0 },
 	{ "Alacritty",      "MusicInfo",                ~0,            1,         1,           0,               -1,       0 },
-  { NULL,             "scratchpad",                0,            1,         0,           0,               -1,      's'},
+  { NULL,             "Alacritty - Scratchpad",    0,            1,         0,           0,               -1,      's'},
     /* default/example rule: can be changed but cannot be eliminated; at least one rule must exist */
 };
 
@@ -132,9 +132,9 @@ static const char *termcmd[] = { "alacritty", NULL };
 static const char *menucmd[] = { "rofi", "-show", "drun", NULL };
 
 /* named scratchpads - First arg only serves to match against key in rules*/
-static const char *scratchpadcmd[] = { "s", "alacritty", "-T", "scratchpad", NULL };
+static const char *scratchpadcmd[] = { "s", "alacritty", "-t", "Alacritty - Scratchpad", NULL };
 
-static const char *bluetuithcmd[] = {"alacritty", "-t", "bluetuith", "-e", "bluetuith", NULL };
+static const char *bluetuithcmd[] = {"alacritty", "-t", "Bluetuith", "-e", "bluetuith", NULL };
 static const char *musiccmd[] = {"/home/orange/Dwm/Scripts/system/dwm_music.sh", NULL };
 static const char *forceoffandclockcmd[] = { "/home/orange/Dwm/Scripts/system/forceoff_lock.sh", NULL };
 static const char *hibernatecmd[] = { "systemctl", "hibernate", NULL };
@@ -151,10 +151,10 @@ static const Key keys[] = {
   { MODKEY,                    XKB_KEY_F6,          spawn,           SHCMD("light -A 5") },
   { MODKEY,                    XKB_KEY_F7,          spawn,           {.v = forceoffandclockcmd } } ,
   { MODKEY,                    XKB_KEY_F9,          spawn,           {.v = musiccmd } } ,
-	{ MODKEY,             		   XKB_KEY_Escape,      spawn,           SHCMD("grim -g \"$(slurp)\" - | wl-copy") }, //Esc
+	{ MODKEY,             		   XKB_KEY_Escape,      spawn,           SHCMD("grim -g \"$(slurp)\" - | tee ~/Pictures/Screenshots/$(date +'%Y-%m-%d_%H-%M-%S').png | wl-copy") },
 
 	/*Super+Shift*/
-	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Escape,      spawn,           {.v = hibernatecmd } }, //休眠
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_Escape,      spawn,           {.v = hibernatecmd } },
   { MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_F1,          spawn,           {.v = poweroffcmd } }, 
   { MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_F2,          spawn,           {.v = rebootcmd } }, 
 
