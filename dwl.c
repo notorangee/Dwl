@@ -2188,11 +2188,19 @@ monocle(Monitor *m)
 	wl_list_for_each(c, &clients, link) {
 		if (!VISIBLEON(c, m) || c->isfloating || c->isfullscreen)
 			continue;
-		resize(c, m->w, 0);
+    struct wlr_box maxwin = {
+			.x = selmon->w.x + gappx,
+			.y = selmon->w.y + gappx,
+			.width = selmon->w.width - 2 * gappx,
+			.height = selmon->w.height - 2 * gappx
+		};
+		resize(c, maxwin, 0);
 		n++;
 	}
-	if (n)
-		snprintf(m->ltsymbol, LENGTH(m->ltsymbol), "[%d]", n);
+	if (n > 1)
+		snprintf(m->ltsymbol, LENGTH(m->ltsymbol), "^%d", n);
+  else
+		snprintf(m->ltsymbol, LENGTH(m->ltsymbol), "");
 	if ((c = focustop(m)))
 		wlr_scene_node_raise_to_top(&c->scene->node);
 }
