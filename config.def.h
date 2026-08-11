@@ -165,6 +165,8 @@ static const Key keys[] = {
   { MODKEY,                    XKB_KEY_w,           togglescratch,    {.v = scratchpadcmd } },
   { MODKEY,                    XKB_KEY_e,           swapscratch,      {0} },
   { MODKEY,                    XKB_KEY_v,           togglemaxwin,     {0} },
+	{ MODKEY,                    XKB_KEY_x,           togglehide,       {.i = +1} },
+	{ MODKEY|WLR_MODIFIER_SHIFT, XKB_KEY_x,           togglehide,       {.i = -1} },
 	{ MODKEY,                    XKB_KEY_j,           focusstack,       {.i = +1} },
 	{ MODKEY,                    XKB_KEY_k,           focusstack,       {.i = -1} },
 	{ MODKEY,                    XKB_KEY_o,           incnmaster,       {.i = +1} },

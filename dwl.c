@@ -141,7 +141,7 @@ typedef struct {
 #endif
 	unsigned int bw;
 	uint32_t tags;
-	int isfloating, oldfloating, isneverfocus, isurgent, isfullscreen, oldfullscreen, isfakefullscreen, fakefullscreen, ismaxwin;
+	int isfloating, oldfloating, isneverfocus, isurgent, isfullscreen, oldfullscreen, isfakefullscreen, fakefullscreen, ismaxwin, ishidden;
 	char scratchkey;
 	uint32_t resize; /* configure serial of a pending resize */
 } Client;
@@ -372,6 +372,7 @@ static void togglescratch(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
 static void togglemaxwin(const Arg *arg);
+static void togglehide(const Arg *arg);
 static void unlocksession(struct wl_listener *listener, void *data);
 static void unmaplayersurfacenotify(struct wl_listener *listener, void *data);
 static void unmapnotify(struct wl_listener *listener, void *data);
@@ -535,6 +536,7 @@ applyrules(Client *c)
 	Monitor *mon = selmon, *m;
 
 	c->scratchkey = 0;
+	c->ishidden = 0;
 	appid = client_get_appid(c);
 	title = client_get_title(c);
 
@@ -567,7 +569,7 @@ arrange(Monitor *m)
 		return;
 
 	wl_list_for_each(c, &clients, link) {
-		if (c->mon == m) {
+		if (c->mon == m && !c->ishidden) {
       if (c->ismaxwin && !c->isfullscreen && !(c->scratchkey == scratchpadcmd[0][0])){
         c->ismaxwin = 0;
         resize(c, c->old_geom, 0);
@@ -1706,7 +1708,7 @@ focusclient(Client *c, int lift)
 	Client *old_c = NULL;
 	LayerSurface *old_l = NULL;
 
-  if (c && c->isneverfocus)
+  if (c && (c->isneverfocus || c->ishidden))
     return;
 
 	if (locked)
@@ -1802,14 +1804,14 @@ focusstack(const Arg *arg)
 		wl_list_for_each(c, &sel->link, link) {
 			if (&c->link == &clients)
 				continue; /* wrap past the sentinel node */
-			if ( !c->isneverfocus && VISIBLEON(c, selmon))
+			if ( !c->isneverfocus && !c->ishidden && VISIBLEON(c, selmon))
 				break; /* found it */
 		}
 	} else {
 		wl_list_for_each_reverse(c, &sel->link, link) {
 			if (&c->link == &clients)
 				continue; /* wrap past the sentinel node */
-			if ( !c->isneverfocus && VISIBLEON(c, selmon))
+			if ( !c->isneverfocus && !c->ishidden && VISIBLEON(c, selmon))
 				break; /* found it */
 		}
 	}
@@ -1825,7 +1827,7 @@ focustop(Monitor *m)
 {
 	Client *c;
 	wl_list_for_each(c, &fstack, flink) {
-		if (!c->isneverfocus && VISIBLEON(c, m))
+		if (!c->isneverfocus && VISIBLEON(c, m) && !c->ishidden)
 			return c;
 	}
 	return NULL;
@@ -1895,7 +1897,7 @@ incnmaster(const Arg *arg)
   Client *c;
 	unsigned int maxmaster = 0, nmaster;
   wl_list_for_each(c, &clients, link) {
-		if (VISIBLEON(c, selmon) && !c->isfloating && !c->isfullscreen)
+		if (VISIBLEON(c, selmon) && !c->isfloating && !c->isfullscreen && !c->ishidden)
 			maxmaster++;
 	}
   nmaster = MAX(selmon->nmaster + arg->i, 0);
@@ -2187,7 +2189,7 @@ monocle(Monitor *m)
 	int n = 0;
 
 	wl_list_for_each(c, &clients, link) {
-		if (!VISIBLEON(c, m) || c->isfloating || c->isfullscreen)
+		if (!VISIBLEON(c, m) || c->isfloating || c->isfullscreen || c->ishidden)
 			continue;
     struct wlr_box maxwin = {
 			.x = selmon->w.x + gappx,
@@ -3136,7 +3138,7 @@ tile(Monitor *m)
 	Client *c;
 
 	wl_list_for_each(c, &clients, link)
-		if (VISIBLEON(c, m) && !c->isfloating && !c->isfullscreen)
+		if (VISIBLEON(c, m) && !c->isfloating && !c->isfullscreen && !c->ishidden)
 			n++;
 	if (n == 0)
 		return;
@@ -3148,7 +3150,7 @@ tile(Monitor *m)
 	i = 0;
 	my = ty = gappx;
 	wl_list_for_each(c, &clients, link) {
-		if (!VISIBLEON(c, m) || c->isfloating || c->isfullscreen)
+		if (!VISIBLEON(c, m) || c->isfloating || c->isfullscreen || c->ishidden)
 			continue;
 		if (i < m->nmaster) {
 			r = MIN(n, m->nmaster) - i;
@@ -3312,6 +3314,34 @@ togglemaxwin(const Arg *arg)
 }
 
 void
+togglehide(const Arg *arg)
+{
+  Client *c, *top = NULL, *sel = focustop(selmon);
+  if (!arg || (sel && (sel->isfullscreen || sel->scratchkey == scratchpadcmd[0][0])))
+    return;
+
+  wl_list_for_each(c, &clients, link) {
+    if (VISIBLEON(c, selmon) && !c->isfullscreen && !c->isneverfocus && c->ishidden){
+      if (!top || (c->ishidden > top->ishidden))
+        top = c;
+    }
+  }
+  if (arg->i > 0 && sel) {
+    wlr_scene_node_set_enabled(&sel->scene->node, 0);
+    sel->ishidden = top ? top->ishidden + 1 : 1;
+    focusclient(focustop(selmon), 1);
+  } else if (arg->i < 0 && top) {
+    wlr_scene_node_set_enabled(&top->scene->node, 1);
+    top->ishidden = 0;
+    focusclient(top, 1);
+  } else {
+    return;
+  }
+
+  arrange(selmon);
+}
+
+void
 unlocksession(struct wl_listener *listener, void *data)
 {
 	SessionLock *lock = wl_container_of(listener, lock, unlock);
@@ -3355,6 +3385,7 @@ unmapnotify(struct wl_listener *listener, void *data)
 		wl_list_remove(&c->flink);
 	}
 
+  c->ishidden = 0;
 	wlr_scene_node_destroy(&c->scene->node);
 	printstatus();
 	motionnotify(0, NULL, 0, 0, 0, 0);
