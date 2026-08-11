@@ -141,7 +141,7 @@ typedef struct {
 #endif
 	unsigned int bw;
 	uint32_t tags;
-	int isfloating, isneverfocus, isurgent, isfullscreen, oldfullscreen, isfakefullscreen, fakefullscreen, ismaxwin;
+	int isfloating, oldfloating, isneverfocus, isurgent, isfullscreen, oldfullscreen, isfakefullscreen, fakefullscreen, ismaxwin;
 	char scratchkey;
 	uint32_t resize; /* configure serial of a pending resize */
 } Client;
@@ -361,6 +361,7 @@ static void setup(void);
 static void spawn(const Arg *arg);
 static void spawnscratch(const Arg *arg);
 static void startdrag(struct wl_listener *listener, void *data);
+static void swapscratch(const Arg *arg);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
@@ -3061,6 +3062,51 @@ startdrag(struct wl_listener *listener, void *data)
 	LISTEN_STATIC(&drag->icon->events.destroy, destroydragicon);
 }
 
+void swapscratch(const Arg *arg){
+	Client *c, *sel = focustop(selmon);
+	unsigned int found = 0;
+  struct wlr_box scratch_box;
+  if (!sel || sel->scratchkey == scratchpadcmd[0][0] || (sel->fakefullscreen && sel->isfullscreen))
+    return;
+
+	/* search for first window that matches the scratchkey */
+	wl_list_for_each(c, &clients, link)
+		if (c->scratchkey == scratchpadcmd[0][0]) {
+			found = 1;
+			break;
+		}
+
+	if (found) {
+    if (c->isfullscreen) {
+      c->oldfullscreen = 1;
+      setfullscreen(c, 0);
+    }
+    c->tags = selmon->tagset[selmon->seltags];
+    c->oldfloating = sel->isfloating;
+    c->isfloating = 0;
+    c->old_geom = c->geom;
+    sel->scratchkey = c->scratchkey;
+    c->scratchkey = 0;
+    resize(c, sel->geom, 0);
+  }
+  scratch_box.width = selmon->m.width / 2;
+  scratch_box.height = selmon->m.height / 2;
+  scratch_box.x = selmon->m.x + (selmon->m.width - scratch_box.width) / 2;
+  scratch_box.y = selmon->m.y + (selmon->m.height - scratch_box.height) / 2;
+  sel->scratchkey = scratchpadcmd[0][0];
+  sel->tags = selmon->tagset[selmon->seltags];
+  sel->isfloating = 1;
+  sel->geom = scratch_box;
+  if (sel->oldfullscreen) {
+    sel->oldfullscreen = 0;
+    setfullscreen(sel, 1);
+  } else if (!sel->isfullscreen) {
+    resize(sel, sel->geom, 0);
+  }
+  focusclient(sel, 1);
+  arrange(selmon);
+}
+
 void
 tag(const Arg *arg)
 {
@@ -3155,7 +3201,7 @@ togglescratch(const Arg *arg)
 	Client *c, *sel = focustop(selmon);
 	unsigned int found = 0;
 
- if (sel->fakefullscreen && sel->isfullscreen)
+ if (sel && sel->fakefullscreen && sel->isfullscreen)
   return;
 
 	/* search for first window that matches the scratchkey */
@@ -3177,7 +3223,7 @@ togglescratch(const Arg *arg)
     } else {
       focusclient(focustop(selmon), 1);
       wl_list_for_each(sel, &clients, link) {
-        if (sel->mon == selmon && !sel->fakefullscreen && sel->oldfullscreen) {
+        if (sel && sel->mon == selmon && !sel->fakefullscreen && sel->oldfullscreen) {
           sel->oldfullscreen = 0;
           setfullscreen(sel, 1);
           break;

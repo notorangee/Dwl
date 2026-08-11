@@ -163,6 +163,7 @@ static const Key keys[] = {
 	{ MODKEY,                    XKB_KEY_Return,      spawn,            {.v = termcmd} },
 	{ MODKEY,                    XKB_KEY_t,           togglebar,        {0} },
   { MODKEY,                    XKB_KEY_w,           togglescratch,    {.v = scratchpadcmd } },
+  { MODKEY,                    XKB_KEY_e,           swapscratch,      {0} },
   { MODKEY,                    XKB_KEY_v,           togglemaxwin,     {0} },
 	{ MODKEY,                    XKB_KEY_j,           focusstack,       {.i = +1} },
 	{ MODKEY,                    XKB_KEY_k,           focusstack,       {.i = -1} },
