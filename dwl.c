@@ -347,6 +347,7 @@ static void requeststartdrag(struct wl_listener *listener, void *data);
 static void requestmonstate(struct wl_listener *listener, void *data);
 static void resize(Client *c, struct wlr_box geo, int interact);
 static void run(char *startup_cmd);
+static void rotate_clients(const Arg *arg);
 static void setcursor(struct wl_listener *listener, void *data);
 static void setcursorshape(struct wl_listener *listener, void *data);
 static void setfloating(Client *c, int floating);
@@ -2636,6 +2637,30 @@ run(char *startup_cmd)
 	 * loop configuration to listen to libinput events, DRM events, generate
 	 * frame events at the refresh rate, and so on. */
 	wl_display_run(dpy);
+}
+
+static void rotate_clients(const Arg *arg) {
+	Monitor* m = selmon;
+	Client *c;
+	Client *first = NULL;
+	Client *last = NULL;
+
+	if (arg->i == 0)
+		return;
+
+	wl_list_for_each(c, &clients, link) {
+		if (VISIBLEON(c, m) && !c->isfloating && !c->isfullscreen && !c->isneverfocus && !c->ishidden && !c->ismaxwin) {
+			if (first == NULL) first = c;
+			last = c;
+		}
+	}
+	if (first != last) {
+		struct wl_list *append_to = (arg->i > 0) ? &last->link : first->link.prev;
+		struct wl_list *elem = (arg->i > 0) ? &first->link : &last->link;
+		wl_list_remove(elem);
+		wl_list_insert(append_to, elem);
+		arrange(selmon);
+	} 
 }
 
 void
