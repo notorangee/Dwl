@@ -3215,10 +3215,13 @@ togglefullscreen(const Arg *arg)
 {
 	Client *sel = focustop(selmon);
 	if (sel){
-    if (sel->fakefullscreen)
+    if (sel->oldfullscreen == true)
+      return;
+    if (sel->fakefullscreen){
       setfakefullscreen(sel, !sel->isfakefullscreen);
-    else
+    } else {
       setfullscreen(sel, !sel->isfullscreen);
+    }
   }
 }
 
@@ -3227,9 +3230,6 @@ togglescratch(const Arg *arg)
 {
 	Client *c, *sel = focustop(selmon);
 	unsigned int found = 0;
-
- if (sel && sel->fakefullscreen && sel->isfullscreen)
-  return;
 
 	/* search for first window that matches the scratchkey */
 	wl_list_for_each(c, &clients, link)
@@ -3242,17 +3242,17 @@ togglescratch(const Arg *arg)
 		c->tags = VISIBLEON(c, selmon) ? 0 : selmon->tagset[selmon->seltags];
 
     if (c->tags != 0){
-      if (sel && !sel->fakefullscreen && sel->isfullscreen){
-        sel->oldfullscreen = 1;
-        setfullscreen(sel, 0);
+      if (sel && (sel->isfakefullscreen || sel->isfullscreen)){
+        togglefullscreen(NULL);
+        sel->oldfullscreen = true;
       }
       focusclient(c, 1);
     } else {
       focusclient(focustop(selmon), 1);
       wl_list_for_each(sel, &clients, link) {
-        if (sel && sel->mon == selmon && !sel->fakefullscreen && sel->oldfullscreen) {
-          sel->oldfullscreen = 0;
-          setfullscreen(sel, 1);
+        if (sel && sel->mon == selmon && sel->oldfullscreen) {
+          sel->oldfullscreen = false;
+          togglefullscreen(NULL);
           break;
         }
       }
