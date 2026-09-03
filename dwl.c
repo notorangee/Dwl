@@ -3242,7 +3242,7 @@ togglescratch(const Arg *arg)
 		c->tags = VISIBLEON(c, selmon) ? 0 : selmon->tagset[selmon->seltags];
 
     if (c->tags != 0){
-      if (sel && (sel->isfakefullscreen || sel->isfullscreen)){
+      if (sel && sel->isfullscreen){
         togglefullscreen(NULL);
         sel->oldfullscreen = true;
       }
