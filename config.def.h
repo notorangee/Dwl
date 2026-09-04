@@ -32,6 +32,7 @@ static const Rule rules[] = {
   { "Alacritty",      "Alacritty - AutoStart",     1 << 0,       0,         0,           0,               -1,       0 },
 	{ "google-chrome",  NULL,                        1 << 1,       0,         0,           1,               -1,       0 },
 	{ "steam",          NULL,                        1 << 2,       0,         0,           0,               -1,       0 },
+	{ "keepassxc",      NULL,                        1 << 5,       1,         0,           0,               -1,       0 },
   { "Alacritty",      "Bluetuith",                 0,            1,         0,           0,               -1,       0 },
   { "Alacritty",      "MusicWin",                 ~0,            1,         0,           0,               -1,       0 },
 	{ "Alacritty",      "MusicVisua",               ~0,            1,         1,           0,               -1,       0 },
