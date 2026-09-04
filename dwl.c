@@ -87,6 +87,7 @@
 enum { CurNormal, CurPressed, CurMove, CurResize }; /* cursor */
 enum { XDGShell, LayerShell, X11 }; /* client types */
 enum { LyrBg, LyrBottom, LyrTile, LyrFloat, LyrTop, LyrFS, LyrOverlay, LyrIMPopup, LyrBlock, NUM_LAYERS }; /* scene layers */
+enum { WIN_NW, WIN_N, WIN_NE, WIN_W, WIN_C, WIN_E, WIN_SW, WIN_S, WIN_SE }; /* coordinates for moveplace */
 
 typedef union {
 	int i;
@@ -333,6 +334,7 @@ static void motionnotify(uint32_t time, struct wlr_input_device *device, double 
 		double sy, double sx_unaccel, double sy_unaccel);
 static void motionrelative(struct wl_listener *listener, void *data);
 static void moveresize(const Arg *arg);
+static void moveplace(const Arg *arg);
 static void outputmgrapply(struct wl_listener *listener, void *data);
 static void outputmgrapplyortest(struct wlr_output_configuration_v1 *config, int test);
 static void outputmgrtest(struct wl_listener *listener, void *data);
@@ -391,6 +393,7 @@ static void zoom(const Arg *arg);
 /* variables */
 static pid_t child_pid = -1;
 static int locked;
+static uint32_t oldsignal;
 static void *exclusive_focus;
 static struct wl_display *dpy;
 static struct wl_event_loop *event_loop;
@@ -2349,6 +2352,48 @@ moveresize(const Arg *arg)
 		wlr_cursor_set_xcursor(cursor, cursor_mgr, "se-resize");
 		break;
 	}
+}
+
+void moveplace(const Arg *arg) {
+  Client *c = focustop(selmon);
+  int nh, nw, nx, ny;
+  if (!c || (arg->ui >= 9))
+    return;
+  if (c->isfloating && oldsignal == arg->ui) {
+    togglefloating(NULL);
+    return;
+  }
+  if (selmon->lt[selmon->sellt]->arrange && !c->isfloating)
+    togglefloating(NULL);
+  nh = (selmon->w.height / 2) - (c->bw * 2);
+  nw = (selmon->w.width / 2) - (c->bw * 2);
+  nx = (arg->ui % 3) - 1;
+  ny = (arg->ui / 3) - 1;
+  if (nx < 0)
+    nx = selmon->w.x;
+  else if (nx > 0)
+    nx = selmon->w.x + selmon->w.width - nw - c->bw * 2;
+  else
+    nx = selmon->w.x + selmon->w.width / 2 - nw / 2 - c->bw;
+  if (ny < 0)
+    ny = selmon->w.y;
+  else if (ny > 0)
+    ny = selmon->w.y + selmon->w.height - nh - c->bw * 2;
+  else
+    ny = selmon->w.y + selmon->w.height / 2 - nh / 2 - c->bw;
+
+  struct wlr_box movesize = {
+		.x = nx,
+		.y = ny,
+		.width = nw,
+		.height = nh
+	};
+  resize(c, movesize, false);
+  wlr_cursor_warp_closest(cursor, NULL, nx + nw / 2.0, ny + nh / 2.0);
+	motionnotify(0, NULL, 0, 0, 0, 0);
+  oldsignal = arg->ui;
+  snprintf(selmon->ltsymbol, LENGTH(selmon->ltsymbol), "");
+  printstatus();
 }
 
 void
