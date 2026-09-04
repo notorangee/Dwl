@@ -567,7 +567,7 @@ applyrules(Client *c)
 void
 arrange(Monitor *m)
 {
-	Client *c;
+	Client *c, *sel = focustop(selmon);
 
 	if (!m->wlr_output->enabled)
 		return;
@@ -586,7 +586,10 @@ arrange(Monitor *m)
 	wlr_scene_node_set_enabled(&m->fullscreen_bg->node,
 			(c = focustop(m)) && c->isfullscreen);
 
-	strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, LENGTH(m->ltsymbol));
+  if (sel && sel->isfloating && !strstr(selmon->lt[selmon->sellt]->symbol, layouts[1].symbol)) 
+    snprintf(selmon->ltsymbol, LENGTH(selmon->ltsymbol), "%s => %s", selmon->lt[selmon->sellt]->symbol, layouts[1].symbol);
+  else
+    strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, LENGTH(m->ltsymbol));
 
 	/* We move all clients (except fullscreen and unmanaged) to LyrTile while
 	 * in floating layout to avoid "real" floating clients be always on top */
@@ -1763,6 +1766,13 @@ focusclient(Client *c, int lift)
 			client_activate_surface(old, 0);
 		}
 	}
+
+  if (c){
+    if (c->isfloating && !strstr(c->mon->lt[c->mon->sellt]->symbol, layouts[1].symbol)) 
+      snprintf(c->mon->ltsymbol, LENGTH(c->mon->ltsymbol), "%s => %s", c->mon->lt[c->mon->sellt]->symbol, layouts[1].symbol);
+    else
+      strncpy(c->mon->ltsymbol, c->mon->lt[c->mon->sellt]->symbol, LENGTH(c->mon->ltsymbol));
+  }
 	printstatus();
 
 	if (!c) {
