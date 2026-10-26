@@ -1610,7 +1610,6 @@ focusclient(Client *c, LayerSurface *l, int lift)
 		/* Don't change border color if there is an exclusive focus or we are
 		 * handling a drag operation */
 		if (!(old_l && old_l->layer_surface->current.keyboard_interactive == ZWLR_LAYER_SURFACE_V1_KEYBOARD_INTERACTIVITY_EXCLUSIVE)
-				&& !(old_c && client_wants_focus(old_c))
 				&& !seat->drag)
 			client_set_border_color(c, focuscolor);
 	}
