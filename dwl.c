@@ -482,6 +482,7 @@ static struct wl_listener request_set_sel = {.notify = setsel};
 static struct wl_listener request_set_cursor_shape = {.notify = setcursorshape};
 static struct wl_listener request_start_drag = {.notify = requeststartdrag};
 static struct wl_listener start_drag = {.notify = startdrag};
+static struct wl_listener drag_icon_destroy = {.notify = destroydragicon};
 static struct wl_listener new_session_lock = {.notify = locksession};
 static struct wl_listener new_foreign_toplevel_capture_request = {.notify = capturerequest};
 
@@ -1423,7 +1424,6 @@ destroydragicon(struct wl_listener *listener, void *data)
 	focusclient(focustop(selmon), NULL, 1);
 	motionnotify(0, NULL, 0, 0, 0, 0);
 	wl_list_remove(&listener->link);
-	free(listener);
 }
 
 void
@@ -3022,7 +3022,7 @@ startdrag(struct wl_listener *listener, void *data)
 		return;
 
 	drag->icon->data = &wlr_scene_drag_icon_create(drag_icon, drag->icon)->node;
-	LISTEN_STATIC(&drag->icon->events.destroy, destroydragicon);
+	wl_signal_add(&drag->icon->events.destroy, &drag_icon_destroy);
 }
 
 void
