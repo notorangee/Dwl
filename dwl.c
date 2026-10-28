@@ -1763,13 +1763,13 @@ dwl_ipc_output_printstatus_to(DwlIpcOutput *ipc_output)
 {
 	Monitor *monitor = ipc_output->mon;
 	Client *c, *focused;
-	int tagmask, state, numclients, focused_client, tag;
+	int tagmask, state, numclients, ipc_focused_client, tag;
 	const char *title, *appid;
 	focused = focustop(monitor);
 	zdwl_ipc_output_v2_send_active(ipc_output->resource, monitor == selmon);
 
 	for (tag = 0 ; tag < TAGCOUNT; tag++) {
-		numclients = state = focused_client = 0;
+		numclients = state = ipc_focused_client = 0;
 		tagmask = 1 << tag;
 		if ((tagmask & monitor->tagset[monitor->seltags]) != 0)
 			state |= ZDWL_IPC_OUTPUT_V2_TAG_STATE_ACTIVE;
@@ -1780,13 +1780,13 @@ dwl_ipc_output_printstatus_to(DwlIpcOutput *ipc_output)
 			if (!(c->tags & tagmask))
 				continue;
 			if (c == focused)
-				focused_client = 1;
+				ipc_focused_client = 1;
 			if (c->isurgent)
 				state |= ZDWL_IPC_OUTPUT_V2_TAG_STATE_URGENT;
 
 			numclients++;
 		}
-		zdwl_ipc_output_v2_send_tag(ipc_output->resource, tag, state, numclients, focused_client);
+		zdwl_ipc_output_v2_send_tag(ipc_output->resource, tag, state, numclients, ipc_focused_client);
 	}
 	title = focused ? client_get_title(focused) : "";
 	appid = focused ? client_get_appid(focused) : "";
@@ -1827,7 +1827,7 @@ dwl_ipc_output_set_client_tags(struct wl_client *client, struct wl_resource *res
 
 	selected_client->tags = newtags;
 	if (selmon == monitor)
-		focusclient(focustop(monitor), 1);
+		focusclient(focustop(monitor), NULL, 1);
 	arrange(selmon);
 	printstatus();
 }
@@ -1872,7 +1872,7 @@ dwl_ipc_output_set_tags(struct wl_client *client, struct wl_resource *resource, 
 
 	monitor->tagset[monitor->seltags] = newtags;
 	if (selmon == monitor)
-		focusclient(focustop(monitor), 1);
+		focusclient(focustop(monitor), NULL, 1);
 	arrange(monitor);
 	printstatus();
 }
@@ -2196,7 +2196,6 @@ keypress(struct wl_listener *listener, void *data)
 	/* Pass unhandled keycodes along to the client. */
 	wlr_seat_keyboard_notify_key(seat, event->time_msec,
 			event->keycode, event->state);
-  }
 }
 
 void
@@ -3364,6 +3363,8 @@ setup(void)
 	text_input_manager = wlr_text_input_manager_v3_create(dpy);
 	input_method_relay = input_method_relay_create();
 
+  wl_global_create(dpy, &zdwl_ipc_manager_v2_interface, 2, NULL, dwl_ipc_manager_bind);
+
 	/* Make sure XWayland clients don't connect to the parent X server,
 	 * e.g when running in the x11 backend or the wayland backend and the
 	 * compositor has Xwayland support */
@@ -3508,7 +3509,7 @@ void swapscratch(const Arg *arg){
   } else if (!sel->isfullscreen) {
     resize(sel, sel->geom, 0);
   }
-  focusclient(sel, 1);
+  focusclient(sel, NULL, 1);
   arrange(selmon);
 }
 
@@ -3624,9 +3625,9 @@ togglescratch(const Arg *arg)
         togglefullscreen(NULL);
         sel->oldfullscreen = true;
       }
-      focusclient(c, 1);
+      focusclient(c, NULL, 1);
     } else {
-      focusclient(focustop(selmon), 1);
+      focusclient(focustop(selmon), NULL, 1);
       wl_list_for_each(sel, &clients, link) {
         if (sel && sel->mon == selmon && sel->oldfullscreen) {
           sel->oldfullscreen = false;
@@ -3711,8 +3712,9 @@ togglemaxwin(const Arg *arg)
 		snprintf(selmon->ltsymbol, LENGTH(selmon->ltsymbol), "");
 		resize(c, maxwin, 0);
 		wlr_scene_node_raise_to_top(&c->scene_surface->node);
-		focusclient(c, 1);
+		focusclient(c, NULL, 1);
     printstatus();
+  }
 }
 
 void
@@ -3799,11 +3801,11 @@ togglehide(const Arg *arg)
   if (arg->i > 0 && sel) {
     wlr_scene_node_set_enabled(&sel->scene->node, 0);
     sel->ishidden = top ? top->ishidden + 1 : 1;
-    focusclient(focustop(selmon), 1);
+    focusclient(focustop(selmon), NULL, 1);
   } else if (arg->i < 0 && top) {
     wlr_scene_node_set_enabled(&top->scene->node, 1);
     top->ishidden = 0;
-    focusclient(top, 1);
+    focusclient(top, NULL, 1);
   } else {
     return;
   }
